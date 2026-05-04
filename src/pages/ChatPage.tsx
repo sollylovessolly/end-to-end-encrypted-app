@@ -791,13 +791,6 @@ export default function ChatPage() {
               </div>
             ) : null}
 
-            {activeFolder === "groups" ? (
-              <div className="mx-4 my-5 rounded-xl border border-[#2d3d4c] bg-[#111b26] p-5 text-[16px] leading-7 text-[#91a8bd]">
-                <p className="font-semibold text-white">Groups</p>
-                <p>This is a dummy folder for the Telegram-style layout.</p>
-              </div>
-            ) : null}
-
             {contacts.length > 0 && visibleContacts.length === 0 && activeFolder !== "groups" ? (
               <div className="mx-4 my-5 rounded-xl border border-[#2d3d4c] bg-[#111b26] p-5 text-[16px] leading-7 text-[#91a8bd]">
                 {activeFolder === "unread"
