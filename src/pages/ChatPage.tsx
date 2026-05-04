@@ -2,9 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import {
   Archive,
+  ArrowLeft,
   CheckCheck,
   Folder,
-  KeyRound,
   Lock,
   LogOut,
   Menu,
@@ -16,8 +16,8 @@ import {
   Phone,
   Search,
   Send,
-  ShieldCheck,
   Smile,
+  Star,
   X,
 } from "lucide-react";
 import {
@@ -380,11 +380,7 @@ export default function ChatPage() {
           });
         });
 
-        const nextContacts = Array.from(existing.values());
-        if (!selectedContactId && nextContacts[0]) {
-          setSelectedContactId(nextContacts[0].id);
-        }
-        return nextContacts;
+        return Array.from(existing.values());
       });
     } catch (error) {
       console.warn(error);
@@ -588,80 +584,54 @@ export default function ChatPage() {
 
   if (!user) {
     return (
-      <main className="min-h-screen bg-zinc-950 text-zinc-50">
-        <div className="mx-auto grid min-h-screen max-w-6xl items-center gap-10 px-5 py-10 lg:grid-cols-[1fr_420px]">
-          <section>
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-sm text-emerald-200">
-              <Lock size={16} />
-              Client-side encryption first
-            </div>
-            <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-6xl">
-              WhisperBox
-            </h1>
-            <p className="mt-5 max-w-2xl text-lg leading-8 text-zinc-300">
-              A Telegram-inspired secure messaging demo. Messages are encrypted
-              in the browser with AES-GCM, while RSA-OAEP protects each message key.
-            </p>
+      <main className="min-h-screen overflow-x-hidden bg-[#212121] px-5 py-8 text-white sm:py-12">
+        <div className="mx-auto flex min-h-[calc(100vh-64px)] w-full max-w-[540px] flex-col items-center justify-center">
+          <div className="mb-10 flex h-40 w-40 items-center justify-center rounded-full bg-[#8774e1] sm:h-48 sm:w-48">
+            <Star size={86} className="fill-[#212121] text-[#212121] sm:h-28 sm:w-28" />
+          </div>
 
-            <div className="mt-8 grid max-w-3xl gap-3 sm:grid-cols-3">
-              <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-                <KeyRound className="text-emerald-300" size={22} />
-                <p className="mt-3 font-medium">Public key shared</p>
-                <p className="mt-1 text-sm text-zinc-400">Backend may store this.</p>
-              </div>
-              <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-                <ShieldCheck className="text-emerald-300" size={22} />
-                <p className="mt-3 font-medium">Private key local</p>
-                <p className="mt-1 text-sm text-zinc-400">Never sent to server.</p>
-              </div>
-              <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-                <MessageCircle className="text-emerald-300" size={22} />
-                <p className="mt-3 font-medium">Ciphertext stored</p>
-                <p className="mt-1 text-sm text-zinc-400">No plaintext backend.</p>
-              </div>
-            </div>
-          </section>
+          <div className="mb-9 text-center">
+            <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+              Sign in to Sollygram
+            </h1>
+            <p className="mx-auto mt-6 max-w-[360px] text-xl leading-8 text-[#b8b8b8] sm:text-2xl">
+              Enter your username and password to unlock your encrypted chats.
+            </p>
+          </div>
 
           <form
             onSubmit={startSession}
-            className="rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl shadow-emerald-950/20"
+            className="w-full"
           >
-            <div className="mb-6">
-              <h2 className="text-2xl font-semibold">Start secure session</h2>
-              <p className="mt-2 text-sm leading-6 text-zinc-400">
-                This creates demo auth plus a real browser-generated encryption key pair.
-              </p>
-            </div>
-
-            <label className="block text-sm font-medium text-zinc-300">
-              Username
+            <label className="relative block rounded-xl border border-[#3a3a3a] px-5 pb-3 pt-2 focus-within:border-[#8774e1]">
+              <span className="text-sm font-medium text-[#8774e1]">Username</span>
               <input
                 value={usernameInput}
                 onChange={(event) => setUsernameInput(event.target.value)}
-                className="mt-2 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none transition focus:border-emerald-400"
-                placeholder="e.g. favour"
+                className="mt-1 w-full bg-transparent text-xl text-white outline-none placeholder:text-[#8f8f8f]"
+                placeholder="e.g. solly"
               />
             </label>
 
-            <label className="mt-4 block text-sm font-medium text-zinc-300">
-              Password
+            <label className="relative mt-5 block rounded-xl border border-[#3a3a3a] px-5 pb-3 pt-2 focus-within:border-[#8774e1]">
+              <span className="text-sm font-medium text-[#8774e1]">Password</span>
               <input
                 value={passwordInput}
                 onChange={(event) => setPasswordInput(event.target.value)}
-                className="mt-2 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none transition focus:border-emerald-400"
-                placeholder="demo password"
+                className="mt-1 w-full bg-transparent text-xl text-white outline-none placeholder:text-[#8f8f8f]"
+                placeholder="minimum 8 characters"
                 type="password"
               />
             </label>
 
-            <div className="mt-4 grid grid-cols-2 gap-2 rounded-lg bg-zinc-950 p-1">
+            <div className="mt-5 grid grid-cols-2 gap-2 rounded-xl bg-[#181818] p-1">
               <button
                 type="button"
                 onClick={() => setAuthMode("register")}
-                className={`rounded-md px-3 py-2 text-sm font-medium ${
+                className={`rounded-lg px-3 py-3 text-sm font-semibold ${
                   authMode === "register"
-                    ? "bg-emerald-400 text-zinc-950"
-                    : "text-zinc-400"
+                    ? "bg-[#8774e1] text-white"
+                    : "text-[#9b9b9b]"
                 }`}
               >
                 Register
@@ -669,10 +639,10 @@ export default function ChatPage() {
               <button
                 type="button"
                 onClick={() => setAuthMode("login")}
-                className={`rounded-md px-3 py-2 text-sm font-medium ${
+                className={`rounded-lg px-3 py-3 text-sm font-semibold ${
                   authMode === "login"
-                    ? "bg-emerald-400 text-zinc-950"
-                    : "text-zinc-400"
+                    ? "bg-[#8774e1] text-white"
+                    : "text-[#9b9b9b]"
                 }`}
               >
                 Login
@@ -681,7 +651,7 @@ export default function ChatPage() {
 
             <button
               disabled={isStarting}
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-400 px-4 py-3 font-semibold text-zinc-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-[#8774e1] px-4 py-5 text-lg font-semibold text-white transition hover:bg-[#9787e8] disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Lock size={18} />
               {isStarting
@@ -691,7 +661,7 @@ export default function ChatPage() {
                   : "Login and unlock key"}
             </button>
 
-            <p className="mt-4 rounded-lg border border-zinc-800 bg-zinc-950 p-3 text-sm leading-6 text-zinc-400">
+            <p className="mt-5 rounded-xl border border-[#333] bg-[#181818] p-4 text-sm leading-6 text-[#b8b8b8]">
               {status}
             </p>
           </form>
@@ -708,8 +678,8 @@ export default function ChatPage() {
         <X size={18} />
       </div>
 
-      <div className="grid h-screen grid-cols-[86px_520px_minmax(0,1fr)]">
-        <nav className="flex flex-col bg-[#111b26] text-[#8aa6c1]">
+      <div className="grid h-[100dvh] min-h-0 grid-cols-1 overflow-hidden md:grid-cols-[76px_320px_minmax(0,1fr)] lg:grid-cols-[86px_420px_minmax(0,1fr)] xl:grid-cols-[86px_520px_minmax(0,1fr)]">
+        <nav className="hidden flex-col bg-[#111b26] text-[#8aa6c1] md:flex">
           <div className="flex-1">
             <button className="flex h-14 w-full items-center justify-center text-[#8aa6c1]">
               <Menu size={27} />
@@ -769,7 +739,11 @@ export default function ChatPage() {
           </button>
         </nav>
 
-        <aside className="border-r border-[#101820] bg-[#17212b]">
+        <aside
+          className={`${
+            selectedContact ? "hidden md:block" : "block"
+          } min-h-0 border-r border-[#101820] bg-[#17212b] md:col-start-2`}
+        >
           <div className="flex h-[68px] items-center gap-3 px-4">
             <div className="flex min-w-0 flex-1 items-center gap-3 rounded-full bg-[#242f3d] px-6 py-3">
               <Search size={20} className="text-[#7e91a3]" />
@@ -885,17 +859,32 @@ export default function ChatPage() {
           </div>
         </aside>
 
-        <section className="flex min-h-0 flex-col bg-[#0e1621]">
-          <header className="flex h-[68px] shrink-0 items-center justify-between bg-[#17212b] px-6">
-            <div>
-              <h1 className="text-[18px] font-semibold leading-6 text-white">
-                {selectedContact?.username ?? "Select a chat"}
-              </h1>
-              <p className="text-[14px] leading-5 text-[#8fa8bf]">
-                {selectedContact ? "last seen recently" : "search users from the sidebar"}
-              </p>
+        <section
+          className={`${
+            selectedContact ? "flex" : "hidden md:flex"
+          } min-h-0 flex-col bg-[#0e1621] md:col-start-3`}
+        >
+          <header className="flex h-[68px] shrink-0 items-center justify-between bg-[#17212b] px-4 sm:px-6">
+            <div className="flex min-w-0 items-center gap-3">
+              {selectedContact ? (
+                <button
+                  onClick={() => setSelectedContactId(null)}
+                  className="rounded-full p-1 text-[#8aa6c1] hover:bg-[#243241] md:hidden"
+                  title="Back to chats"
+                >
+                  <ArrowLeft size={22} />
+                </button>
+              ) : null}
+              <div className="min-w-0">
+                <h1 className="truncate text-[18px] font-semibold leading-6 text-white">
+                  {selectedContact?.username ?? "Select a chat"}
+                </h1>
+                <p className="truncate text-[14px] leading-5 text-[#8fa8bf]">
+                  {selectedContact ? "last seen recently" : "search users from the sidebar"}
+                </p>
+              </div>
             </div>
-            <div className="flex items-center gap-6 text-[#7d8c9b]">
+            <div className="flex items-center gap-4 text-[#7d8c9b] lg:gap-6">
               <Search size={24} />
               <Phone size={24} />
               <PanelRight size={24} />
@@ -903,7 +892,7 @@ export default function ChatPage() {
             </div>
           </header>
 
-          <div className="flex h-[58px] shrink-0 items-center justify-between bg-[#1c2b3a] px-7">
+          <div className="flex min-h-[58px] shrink-0 items-center justify-between bg-[#1c2b3a] px-4 sm:px-7">
             <div className="border-l-4 border-[#56aee9] pl-3">
               <p className="text-[16px] text-[#56b7ff]">Pinned message</p>
               <p className="text-[15px] text-white">
@@ -913,7 +902,7 @@ export default function ChatPage() {
             <X size={24} className="text-[#7d8c9b]" />
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto bg-[#0e1621] px-6 py-6">
+          <div className="min-h-0 flex-1 overflow-y-auto bg-[#0e1621] px-3 py-4 sm:px-6 sm:py-6">
             <div className="flex min-h-full flex-col gap-2">
               {!selectedContact ? (
                 <div className="mx-auto mt-24 max-w-md rounded-2xl bg-[#17212b] p-6 text-center text-[#9db2c6]">
@@ -946,7 +935,7 @@ export default function ChatPage() {
                     className={`flex ${isMine ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                    className={`relative max-w-[58%] rounded-2xl px-4 py-2 text-[16px] leading-6 shadow ${
+                      className={`relative max-w-[86%] rounded-2xl px-4 py-2 text-[16px] leading-6 shadow sm:max-w-[72%] xl:max-w-[58%] ${
                         isMine
                           ? "rounded-br-md bg-[#38658d] text-white"
                           : "rounded-bl-md bg-[#182533] text-white"
@@ -970,7 +959,7 @@ export default function ChatPage() {
             </div>
           </div>
 
-          <footer className="min-h-[66px] shrink-0 border-t border-[#1d2a36] bg-[#17212b] px-6 py-2">
+          <footer className="min-h-[66px] shrink-0 border-t border-[#1d2a36] bg-[#17212b] px-3 py-2 sm:px-6">
             <form onSubmit={sendMessage} className="flex min-h-[48px] items-end gap-4">
               <Paperclip size={28} className="shrink-0 text-[#7d8c9b]" />
               <textarea
