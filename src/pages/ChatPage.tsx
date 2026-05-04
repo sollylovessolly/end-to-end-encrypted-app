@@ -1,15 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import {
+  Archive,
   CheckCheck,
+  Folder,
   KeyRound,
   Lock,
   LogOut,
+  Menu,
   MessageCircle,
+  Mic,
+  MoreVertical,
+  PanelRight,
+  Paperclip,
+  Phone,
   Search,
   Send,
   ShieldCheck,
-  UserRound,
+  Smile,
+  X,
 } from "lucide-react";
 import {
   exportPrivateKey,
@@ -102,24 +111,63 @@ export default function ChatPage() {
   const [usernameInput, setUsernameInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
   const [authMode, setAuthMode] = useState<"register" | "login">("register");
+  const [activeFolder, setActiveFolder] = useState<"general" | "unread" | "groups">(
+    "general"
+  );
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("Private key is kept in this browser session.");
   const [isStarting, setIsStarting] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const messageEndRef = useRef<HTMLDivElement | null>(null);
+  const composerRef = useRef<HTMLTextAreaElement | null>(null);
 
   const selectedContact = contacts.find((contact) => contact.id === selectedContactId);
 
-  const visibleContacts = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    if (!query) {
-      return contacts;
+  const latestMessageByContact = useMemo(() => {
+    const latest = new Map<string, ChatMessage>();
+
+    messages.forEach((message) => {
+      const current = latest.get(message.contactId);
+      if (
+        !current ||
+        new Date(message.createdAt).getTime() > new Date(current.createdAt).getTime()
+      ) {
+        latest.set(message.contactId, message);
+      }
+    });
+
+    return latest;
+  }, [messages]);
+
+  const unreadContactIds = useMemo(() => {
+    if (!user) {
+      return new Set<string>();
     }
 
-    return contacts.filter((contact) =>
+    return new Set(
+      Array.from(latestMessageByContact.values())
+        .filter((message) => message.senderId !== user.id)
+        .map((message) => message.contactId)
+    );
+  }, [latestMessageByContact, user]);
+
+  const visibleContacts = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const folderContacts =
+      activeFolder === "groups"
+        ? []
+        : activeFolder === "unread"
+          ? contacts.filter((contact) => unreadContactIds.has(contact.id))
+          : contacts;
+
+    if (!query) {
+      return folderContacts;
+    }
+
+    return folderContacts.filter((contact) =>
       `${contact.username} ${contact.title}`.toLowerCase().includes(query)
     );
-  }, [contacts, search]);
+  }, [activeFolder, contacts, search, unreadContactIds]);
 
   const activeMessages = useMemo(() => {
     return messages
@@ -133,6 +181,18 @@ export default function ChatPage() {
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [activeMessages.length]);
+
+  useEffect(() => {
+    if (!composerRef.current) {
+      return;
+    }
+
+    composerRef.current.style.height = "44px";
+    composerRef.current.style.height = `${Math.min(
+      composerRef.current.scrollHeight,
+      128
+    )}px`;
+  }, [draft]);
 
   useEffect(() => {
     if (token && contacts.length === 0) {
@@ -641,58 +701,138 @@ export default function ChatPage() {
   }
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-100">
-      <div className="grid min-h-screen lg:grid-cols-[340px_1fr]">
-        <aside className="border-r border-zinc-800 bg-zinc-900">
-          <div className="border-b border-zinc-800 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-emerald-400 font-bold text-zinc-950">
-                  {user.username.slice(0, 1).toUpperCase()}
-                </div>
-                <div>
-                  <p className="font-semibold">{user.username}</p>
-                  <p className="text-xs text-emerald-300">private key local</p>
-                </div>
-              </div>
-              <button
-                onClick={logout}
-                className="rounded-lg p-2 text-zinc-400 transition hover:bg-zinc-800 hover:text-white"
-                title="Log out"
-              >
-                <LogOut size={18} />
-              </button>
-            </div>
+    <main className="h-screen overflow-hidden bg-[#0e1621] text-[#f4f7fb]">
+      <div className="hidden h-0 items-center justify-end gap-6 bg-[#243241] px-5 text-[#6f8191]">
+        <span className="h-0.5 w-4 bg-[#6f8191]" />
+        <span className="h-3.5 w-3.5 rounded-sm border-2 border-[#6f8191]" />
+        <X size={18} />
+      </div>
 
-            <div className="mt-4 flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2">
-              <Search size={17} className="text-zinc-500" />
+      <div className="grid h-screen grid-cols-[86px_520px_minmax(0,1fr)]">
+        <nav className="flex flex-col bg-[#111b26] text-[#8aa6c1]">
+          <div className="flex-1">
+            <button className="flex h-14 w-full items-center justify-center text-[#8aa6c1]">
+              <Menu size={27} />
+            </button>
+
+            {[
+              {
+                id: "general",
+                label: "General",
+                icon: MessageCircle,
+                count: contacts.length || undefined,
+              },
+              {
+                id: "unread",
+                label: "Unread",
+                icon: MessageCircle,
+                count: unreadContactIds.size || undefined,
+              },
+              { id: "groups", label: "Groups", icon: Folder, count: "3" },
+            ].map((item) => {
+              const Icon = item.icon;
+              const isActive = activeFolder === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() =>
+                    setActiveFolder(item.id as "general" | "unread" | "groups")
+                  }
+                  className={`relative flex h-[78px] w-full flex-col items-center justify-center gap-1 text-[14px] ${
+                    isActive ? "bg-[#213247] text-[#54b8ff]" : "hover:bg-[#172536]"
+                  }`}
+                >
+                  <div className="relative">
+                    <Icon
+                      size={29}
+                      className={isActive ? "fill-[#54b8ff]" : "fill-[#8aa6c1]"}
+                    />
+                    {item.count ? (
+                      <span className="absolute -right-4 -top-2 rounded-full bg-[#55bdf6] px-1.5 py-0.5 text-[13px] font-medium leading-none text-white">
+                        {item.count}
+                      </span>
+                    ) : null}
+                  </div>
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            onClick={logout}
+            className="mb-4 flex h-[72px] w-full flex-col items-center justify-center gap-1 text-[13px] hover:bg-[#172536]"
+            title="Log out"
+          >
+            <LogOut size={26} />
+            <span>Logout</span>
+          </button>
+        </nav>
+
+        <aside className="border-r border-[#101820] bg-[#17212b]">
+          <div className="flex h-[68px] items-center gap-3 px-4">
+            <div className="flex min-w-0 flex-1 items-center gap-3 rounded-full bg-[#242f3d] px-6 py-3">
+              <Search size={20} className="text-[#7e91a3]" />
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                className="w-full bg-transparent text-sm outline-none placeholder:text-zinc-500"
-                placeholder="Search chats"
+                className="w-full bg-transparent text-[17px] text-[#d7e4ef] outline-none placeholder:text-[#7e91a3]"
+                placeholder="Search"
               />
+            </div>
+            <div className="flex -space-x-3">
+              {[user.username, "E2", "VO"].map((name, index) => (
+                <div
+                  key={`${name}-${index}`}
+                  className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#17212b] bg-[#44a8d8] text-[10px] font-bold"
+                >
+                  {name.slice(0, 2).toUpperCase()}
+                </div>
+              ))}
             </div>
           </div>
 
-          <div className="p-2">
-            {contacts.length === 0 ? (
-              <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 text-sm leading-6 text-zinc-400">
-                <p className="font-medium text-zinc-200">No chats yet</p>
-                <p className="mt-2">
-                  Search for another registered username to start an encrypted
-                  conversation.
+          <div className="h-[calc(100%-68px)] overflow-y-auto">
+            <button className="grid w-full grid-cols-[70px_1fr] items-center px-4 py-2 text-left hover:bg-[#202d3a]">
+              <div className="flex h-[54px] w-[54px] items-center justify-center rounded-full bg-[#607a92]">
+                <Archive size={25} className="fill-white text-white" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center justify-between">
+                  <p className="text-[17px] font-semibold text-white">Archived chats</p>
+                  <span className="rounded-full bg-[#40617d] px-2 py-0.5 text-[12px] font-semibold">
+                    33
+                  </span>
+                </div>
+                <p className="truncate text-[15px] font-semibold text-white">
+                  Encrypted conversations
                 </p>
               </div>
-            ) : null}
+            </button>
 
-            {contacts.length > 0 && visibleContacts.length === 0 ? (
-              <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 text-sm leading-6 text-zinc-400">
-                No matching chats. Keep typing to search registered users.
+            {contacts.length === 0 && activeFolder !== "groups" ? (
+              <div className="mx-4 my-5 rounded-xl border border-[#2d3d4c] bg-[#111b26] p-5 text-[16px] leading-7 text-[#91a8bd]">
+                <p className="font-semibold text-white">No chats yet</p>
+                <p>Search for another registered username to start a conversation.</p>
               </div>
             ) : null}
 
-            {visibleContacts.map((contact) => (
+            {activeFolder === "groups" ? (
+              <div className="mx-4 my-5 rounded-xl border border-[#2d3d4c] bg-[#111b26] p-5 text-[16px] leading-7 text-[#91a8bd]">
+                <p className="font-semibold text-white">Groups</p>
+                <p>This is a dummy folder for the Telegram-style layout.</p>
+              </div>
+            ) : null}
+
+            {contacts.length > 0 && visibleContacts.length === 0 && activeFolder !== "groups" ? (
+              <div className="mx-4 my-5 rounded-xl border border-[#2d3d4c] bg-[#111b26] p-5 text-[16px] leading-7 text-[#91a8bd]">
+                {activeFolder === "unread"
+                  ? "No unread chats."
+                  : "No matching chats. Keep typing to search registered users."}
+              </div>
+            ) : null}
+
+            {visibleContacts.map((contact, index) => (
               <button
                 key={contact.id}
                 onClick={() => {
@@ -701,74 +841,99 @@ export default function ChatPage() {
                     void loadRemoteMessages(contact);
                   }
                 }}
-                className={`flex w-full items-center gap-3 rounded-lg p-3 text-left transition ${
+                className={`grid h-[78px] w-full grid-cols-[70px_1fr] items-center px-4 text-left transition ${
                   selectedContactId === contact.id
-                    ? "bg-emerald-400 text-zinc-950"
-                    : "text-zinc-200 hover:bg-zinc-800"
+                    ? "bg-[#38658d]"
+                    : "hover:bg-[#202d3a]"
                 }`}
               >
-                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-zinc-700 text-sm font-bold">
-                  {contact.username.slice(0, 1)}
+                <div
+                  className={`flex h-[54px] w-[54px] items-center justify-center rounded-full text-[22px] font-medium text-white ${
+                    index % 4 === 0
+                      ? "bg-[#45aed6]"
+                      : index % 4 === 1
+                        ? "bg-[#8c6be8]"
+                        : index % 4 === 2
+                          ? "bg-[#ef6290]"
+                          : "bg-[#f0a63a]"
+                  }`}
+                >
+                  {contact.username.slice(0, 1).toUpperCase()}
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="truncate font-medium">{contact.username}</p>
-                    <span className="text-xs opacity-70">{contact.lastSeen}</span>
+                <div className="min-w-0">
+                  <div className="flex items-center justify-between gap-4">
+                    <p className="truncate text-[17px] font-semibold text-white">
+                      {contact.username}
+                    </p>
+                    <span className="shrink-0 text-[14px] text-[#9bb4cb]">
+                      {contact.lastSeen}
+                    </span>
                   </div>
-                  <p className="truncate text-sm opacity-70">{contact.title}</p>
+                  <div className="mt-1 flex items-center justify-between gap-4">
+                    <p className="truncate text-[15px] text-[#9bb4cb]">
+                      {latestMessageByContact.get(contact.id)?.plaintext ?? contact.title}
+                    </p>
+                    {unreadContactIds.has(contact.id) ? (
+                      <span className="rounded-full bg-[#5eb6f1] px-2 py-0.5 text-[12px] font-semibold text-white">
+                        1
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
               </button>
             ))}
           </div>
         </aside>
 
-        <section className="flex min-h-screen flex-col">
-          <header className="flex items-center justify-between border-b border-zinc-800 bg-zinc-900 px-5 py-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-zinc-800">
-                <UserRound size={21} />
-              </div>
-              <div>
-                <h1 className="font-semibold">{selectedContact?.username ?? "Select a chat"}</h1>
-                <p className="text-sm text-zinc-400">
-                  {selectedContact ? "End-to-end encrypted" : "Choose a contact to begin"}
-                </p>
-              </div>
+        <section className="flex min-h-0 flex-col bg-[#0e1621]">
+          <header className="flex h-[68px] shrink-0 items-center justify-between bg-[#17212b] px-6">
+            <div>
+              <h1 className="text-[18px] font-semibold leading-6 text-white">
+                {selectedContact?.username ?? "Select a chat"}
+              </h1>
+              <p className="text-[14px] leading-5 text-[#8fa8bf]">
+                {selectedContact ? "last seen recently" : "search users from the sidebar"}
+              </p>
             </div>
-            <div className="hidden items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-200 sm:flex">
-              <Lock size={15} />
-              AES-GCM + RSA-OAEP
+            <div className="flex items-center gap-6 text-[#7d8c9b]">
+              <Search size={24} />
+              <Phone size={24} />
+              <PanelRight size={24} />
+              <MoreVertical size={24} />
             </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top_left,_rgba(52,211,153,0.10),_transparent_28%),#09090b] px-4 py-6">
-            <div className="mx-auto flex max-w-3xl flex-col gap-4">
-              <div className="mx-auto max-w-xl rounded-lg border border-zinc-800 bg-zinc-900/90 p-4 text-center text-sm leading-6 text-zinc-300">
-                <ShieldCheck className="mx-auto mb-2 text-emerald-300" size={22} />
-                The UI shows plaintext only after browser-side decryption. The
-                server payload is ciphertext, IV, and an encrypted AES key.
-              </div>
+          <div className="flex h-[58px] shrink-0 items-center justify-between bg-[#1c2b3a] px-7">
+            <div className="border-l-4 border-[#56aee9] pl-3">
+              <p className="text-[16px] text-[#56b7ff]">Pinned message</p>
+              <p className="text-[15px] text-white">
+                E2EE active: AES-GCM messages, RSA-OAEP message keys.
+              </p>
+            </div>
+            <X size={24} className="text-[#7d8c9b]" />
+          </div>
 
+          <div className="min-h-0 flex-1 overflow-y-auto bg-[#0e1621] px-6 py-6">
+            <div className="flex min-h-full flex-col gap-2">
               {!selectedContact ? (
-                <div className="mx-auto max-w-xl rounded-lg border border-dashed border-zinc-700 bg-zinc-950/80 p-6 text-center">
-                  <MessageCircle className="mx-auto text-emerald-300" size={28} />
-                  <h2 className="mt-3 font-semibold">Start a conversation</h2>
-                  <p className="mt-2 text-sm leading-6 text-zinc-400">
-                    Register another account in an incognito window or another
-                    browser, then search that username from the sidebar.
+                <div className="mx-auto mt-24 max-w-md rounded-2xl bg-[#17212b] p-6 text-center text-[#9db2c6]">
+                  <MessageCircle className="mx-auto mb-3 text-[#56b7ff]" size={34} />
+                  <p className="text-[20px] font-semibold text-white">Start a conversation</p>
+                  <p className="mt-2 text-[16px] leading-7">
+                    Register another account in incognito, then search that username
+                    from the left sidebar.
                   </p>
                 </div>
               ) : null}
 
               {selectedContact && activeMessages.length === 0 ? (
-                <div className="mx-auto max-w-xl rounded-lg border border-dashed border-zinc-700 bg-zinc-950/80 p-6 text-center">
-                  <Lock className="mx-auto text-emerald-300" size={28} />
-                  <h2 className="mt-3 font-semibold">
+                <div className="mx-auto mt-24 max-w-md rounded-2xl bg-[#17212b] p-6 text-center text-[#9db2c6]">
+                  <Lock className="mx-auto mb-3 text-[#56b7ff]" size={34} />
+                  <p className="text-[20px] font-semibold text-white">
                     No messages with {selectedContact.username} yet
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-zinc-400">
-                    Send the first message. It will be encrypted before it is
-                    posted to the backend.
+                  </p>
+                  <p className="mt-2 text-[16px] leading-7">
+                    Send the first encrypted message.
                   </p>
                 </div>
               ) : null}
@@ -781,20 +946,20 @@ export default function ChatPage() {
                     className={`flex ${isMine ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-[82%] rounded-xl px-4 py-3 shadow-lg ${
+                    className={`relative max-w-[58%] rounded-2xl px-4 py-2 text-[16px] leading-6 shadow ${
                         isMine
-                          ? "bg-emerald-400 text-zinc-950"
-                          : "border border-zinc-800 bg-zinc-900 text-zinc-100"
+                          ? "rounded-br-md bg-[#38658d] text-white"
+                          : "rounded-bl-md bg-[#182533] text-white"
                       }`}
                     >
-                      <p className="whitespace-pre-wrap text-sm leading-6">
+                      <p className="whitespace-pre-wrap pr-20">
                         {message.status === "failed"
                           ? "Could not decrypt this message on this device."
                           : message.plaintext}
                       </p>
-                      <div className="mt-2 flex items-center justify-end gap-2 text-[11px] opacity-70">
+                      <div className="absolute bottom-2 right-4 flex items-center gap-2 text-[14px] text-[#94b4cf]">
                         <span>{formatTime(message.createdAt)}</span>
-                        {isMine ? <CheckCheck size={14} /> : <Lock size={12} />}
+                        {isMine ? <CheckCheck size={17} className="text-[#6bc8ff]" /> : null}
                       </div>
                     </div>
                   </article>
@@ -805,29 +970,45 @@ export default function ChatPage() {
             </div>
           </div>
 
-          <div className="border-t border-zinc-800 bg-zinc-900 px-4 py-3">
-            <form onSubmit={sendMessage} className="mx-auto flex max-w-3xl items-center gap-3">
-              <input
+          <footer className="min-h-[66px] shrink-0 border-t border-[#1d2a36] bg-[#17212b] px-6 py-2">
+            <form onSubmit={sendMessage} className="flex min-h-[48px] items-end gap-4">
+              <Paperclip size={28} className="shrink-0 text-[#7d8c9b]" />
+              <textarea
+                ref={composerRef}
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    event.currentTarget.form?.requestSubmit();
+                  }
+                }}
                 disabled={!selectedContact}
-                className="min-w-0 flex-1 rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm outline-none transition placeholder:text-zinc-500 focus:border-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
+                rows={1}
+                className="max-h-32 min-h-11 min-w-0 flex-1 resize-none overflow-y-auto bg-transparent py-2 text-[17px] leading-6 text-white outline-none placeholder:text-[#6f8191] disabled:cursor-not-allowed disabled:opacity-60"
                 placeholder={
                   selectedContact
-                    ? `Encrypted message to ${selectedContact.username}`
+                    ? "Write a message..."
                     : "Select a chat first"
                 }
               />
               <button
+                type="button"
+                className="shrink-0 pb-2 text-[#7d8c9b]"
+                title="Emoji"
+              >
+                <Smile size={28} />
+              </button>
+              <button
+                type="submit"
                 disabled={isSending || !selectedContact || !draft.trim()}
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-emerald-400 text-zinc-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+                className="shrink-0 pb-2 text-[#7d8c9b] transition hover:text-[#5eb6f1] disabled:cursor-not-allowed disabled:opacity-40"
                 title="Send encrypted message"
               >
-                <Send size={19} />
+                {draft.trim() ? <Send size={27} /> : <Mic size={29} />}
               </button>
             </form>
-            <p className="mx-auto mt-2 max-w-3xl truncate text-xs text-zinc-500">{status}</p>
-          </div>
+          </footer>
         </section>
       </div>
     </main>
