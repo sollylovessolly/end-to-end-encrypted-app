@@ -119,6 +119,7 @@ export default function ChatPage() {
   const [status, setStatus] = useState("Private key is kept in this browser session.");
   const [isStarting, setIsStarting] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [isRestoringSession, setIsRestoringSession] = useState(false);
   const messageEndRef = useRef<HTMLDivElement | null>(null);
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -219,10 +220,38 @@ export default function ChatPage() {
   }, [draft]);
 
   useEffect(() => {
-    if (token && contacts.length === 0) {
-      void loadRemoteConversations(token);
+    if (!token || !user) {
+      return;
     }
-  }, [token]);
+
+    const sessionToken = token;
+    let cancelled = false;
+
+    async function restoreSessionState() {
+      setIsRestoringSession(true);
+      try {
+        await loadRemoteConversations(sessionToken);
+        if (!cancelled) {
+          setStatus("Session restored. Conversations loaded.");
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.warn(error);
+          setStatus("Session restored, but conversations could not be loaded.");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsRestoringSession(false);
+        }
+      }
+    }
+
+    void restoreSessionState();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token, user]);
 
   useEffect(() => {
     if (!token) {
@@ -466,9 +495,7 @@ export default function ChatPage() {
     }
   }
 
-  async function sendMessage(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
+  async function performSendMessage() {
     if (!user || !token || !selectedContact || !draft.trim()) {
       return;
     }
@@ -536,6 +563,11 @@ export default function ChatPage() {
     } finally {
       setIsSending(false);
     }
+  }
+
+  async function sendMessage(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await performSendMessage();
   }
 
   async function createEncryptedReply(contact: Contact) {
@@ -1000,9 +1032,15 @@ export default function ChatPage() {
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
                 onKeyDown={(event) => {
-                  if (event.key === "Enter" && !event.shiftKey) {
+                  if (
+                    event.key === "Enter" &&
+                    !event.shiftKey &&
+                    !event.nativeEvent.isComposing
+                  ) {
                     event.preventDefault();
-                    event.currentTarget.form?.requestSubmit();
+                    if (!isSending && selectedContact && draft.trim()) {
+                      void performSendMessage();
+                    }
                   }
                 }}
                 disabled={!selectedContact}
@@ -1023,7 +1061,7 @@ export default function ChatPage() {
               </button>
               <button
                 type="submit"
-                disabled={isSending || !selectedContact || !draft.trim()}
+                disabled={isSending || isRestoringSession || !selectedContact || !draft.trim()}
                 className="shrink-0 pb-2 text-[#7d8c9b] transition hover:text-[#5eb6f1] disabled:cursor-not-allowed disabled:opacity-40"
                 title="Send encrypted message"
               >
