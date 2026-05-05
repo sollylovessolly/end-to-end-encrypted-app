@@ -770,29 +770,43 @@ export default function ChatPage() {
             selectedContact ? "hidden md:block" : "block"
           } min-h-0 border-r border-[#101820] bg-[#17212b] md:col-start-2`}
         >
-          <div className="flex h-[68px] items-center gap-3 px-4">
-            <div className="flex min-w-0 flex-1 items-center gap-3 rounded-full bg-[#242f3d] px-6 py-3">
-              <Search size={20} className="text-[#7e91a3]" />
-              <input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                className="w-full bg-transparent text-[17px] text-[#d7e4ef] outline-none placeholder:text-[#7e91a3]"
-                placeholder="Search"
-              />
+          <div className="border-b border-[#223140] px-4 py-3">
+            <div className="flex items-center gap-3">
+              <div className="flex min-w-0 flex-1 items-center gap-3 rounded-full bg-[#242f3d] px-6 py-3">
+                <Search size={20} className="text-[#7e91a3]" />
+                <input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  className="w-full bg-transparent text-[17px] text-[#d7e4ef] outline-none placeholder:text-[#7e91a3]"
+                  placeholder="Search"
+                />
+              </div>
+              <div className="flex -space-x-3">
+                {[user.username, "E2", "VO"].map((name, index) => (
+                  <div
+                    key={`${name}-${index}`}
+                    className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#17212b] bg-[#44a8d8] text-[10px] font-bold"
+                  >
+                    {name.slice(0, 2).toUpperCase()}
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="flex -space-x-3">
-              {[user.username, "E2", "VO"].map((name, index) => (
-                <div
-                  key={`${name}-${index}`}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#17212b] bg-[#44a8d8] text-[10px] font-bold"
-                >
-                  {name.slice(0, 2).toUpperCase()}
-                </div>
-              ))}
+
+            <div className="mt-3 flex items-center gap-3 rounded-2xl bg-[#1a2632] px-3 py-2.5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#8774e1] text-sm font-bold text-white">
+                {(user.displayName ?? user.username).slice(0, 2).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-[15px] font-semibold text-white">
+                  {user.displayName ?? user.username}
+                </p>
+                <p className="truncate text-[13px] text-[#8fa8bf]">@{user.username}</p>
+              </div>
             </div>
           </div>
 
-          <div className="h-[calc(100%-68px)] overflow-y-auto">
+          <div className="h-[calc(100%-105px)] overflow-y-auto">
             <button className="grid w-full grid-cols-[70px_1fr] items-center px-4 py-2 text-left hover:bg-[#202d3a]">
               <div className="flex h-[54px] w-[54px] items-center justify-center rounded-full bg-[#607a92]">
                 <Archive size={25} className="fill-white text-white" />
