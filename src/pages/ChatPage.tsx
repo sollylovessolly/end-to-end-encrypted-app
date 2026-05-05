@@ -642,14 +642,14 @@ export default function ChatPage() {
 
   if (!user) {
     return (
-      <main className="min-h-screen overflow-x-hidden bg-[#212121] px-5 py-8 text-white sm:py-12">
-        <div className="mx-auto flex min-h-[calc(100vh-64px)] w-full max-w-[540px] flex-col items-center justify-center">
+      <main className="h-[100dvh] overflow-y-auto overflow-x-hidden bg-[#212121] px-5 py-6 text-white sm:py-8">
+        <div className="mx-auto flex min-h-full w-full max-w-[540px] flex-col items-center justify-center">
           <div className="mb-10 flex h-40 w-40 items-center justify-center rounded-full bg-[#8774e1] sm:h-48 sm:w-48">
             <Star size={86} className="fill-[#212121] text-[#212121] sm:h-28 sm:w-28" />
           </div>
 
           <div className="mb-9 text-center">
-            <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+            <h1 className="font-display text-4xl font-semibold tracking-tight sm:text-5xl">
               Sign in to Sollygram
             </h1>
             <p className="mx-auto mt-6 max-w-[360px] text-xl leading-8 text-[#b8b8b8] sm:text-2xl">
@@ -662,7 +662,7 @@ export default function ChatPage() {
             className="w-full"
           >
             <label className="relative block rounded-xl border border-[#3a3a3a] px-5 pb-3 pt-2 focus-within:border-[#8774e1]">
-              <span className="text-sm font-medium text-[#8774e1]">Username</span>
+              <span className="font-display text-sm font-medium tracking-[0.08em] text-[#8774e1]">Username</span>
               <input
                 value={usernameInput}
                 onChange={(event) => setUsernameInput(event.target.value)}
@@ -672,7 +672,7 @@ export default function ChatPage() {
             </label>
 
             <label className="relative mt-5 block rounded-xl border border-[#3a3a3a] px-5 pb-3 pt-2 focus-within:border-[#8774e1]">
-              <span className="text-sm font-medium text-[#8774e1]">Password</span>
+              <span className="font-display text-sm font-medium tracking-[0.08em] text-[#8774e1]">Password</span>
               <input
                 value={passwordInput}
                 onChange={(event) => setPasswordInput(event.target.value)}
@@ -729,14 +729,14 @@ export default function ChatPage() {
   }
 
   return (
-    <main className="h-screen overflow-hidden bg-[#0e1621] text-[#f4f7fb]">
+    <main className="h-[100dvh] overflow-hidden bg-[#0e1621] text-[#f4f7fb]">
       <div className="hidden h-0 items-center justify-end gap-6 bg-[#243241] px-5 text-[#6f8191]">
         <span className="h-0.5 w-4 bg-[#6f8191]" />
         <span className="h-3.5 w-3.5 rounded-sm border-2 border-[#6f8191]" />
         <X size={18} />
       </div>
 
-      <div className="grid h-[100dvh] min-h-0 grid-cols-1 overflow-hidden md:grid-cols-[76px_320px_minmax(0,1fr)] lg:grid-cols-[86px_420px_minmax(0,1fr)] xl:grid-cols-[86px_520px_minmax(0,1fr)]">
+      <div className="grid h-full min-h-0 grid-cols-1 overflow-hidden md:grid-cols-[76px_320px_minmax(0,1fr)] lg:grid-cols-[86px_420px_minmax(0,1fr)] xl:grid-cols-[86px_520px_minmax(0,1fr)]">
         <nav className="hidden flex-col bg-[#111b26] text-[#8aa6c1] md:flex">
           <div className="flex-1">
             <button className="flex h-14 w-full items-center justify-center text-[#8aa6c1]">
@@ -800,9 +800,9 @@ export default function ChatPage() {
         <aside
           className={`${
             selectedContact ? "hidden md:block" : "block"
-          } min-h-0 border-r border-[#101820] bg-[#17212b] md:col-start-2`}
+          } min-h-0 border-r border-[#101820] bg-[#17212b] md:col-start-2 md:flex md:flex-col`}
         >
-          <div className="border-b border-[#223140] px-4 py-3">
+          <div className="shrink-0 border-b border-[#223140] px-4 py-3">
             <div className="flex items-center gap-3">
               <div className="flex min-w-0 flex-1 items-center gap-3 rounded-full bg-[#242f3d] px-6 py-3">
                 <Search size={20} className="text-[#7e91a3]" />
@@ -838,7 +838,7 @@ export default function ChatPage() {
             </div>
           </div>
 
-          <div className="h-[calc(100%-105px)] overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             <button className="grid w-full grid-cols-[70px_1fr] items-center px-4 py-2 text-left hover:bg-[#202d3a]">
               <div className="flex h-[54px] w-[54px] items-center justify-center rounded-full bg-[#607a92]">
                 <Archive size={25} className="fill-white text-white" />
