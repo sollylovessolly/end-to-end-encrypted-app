@@ -68,6 +68,7 @@ type Contact = {
   publicKey: string;
   privateKey?: string;
   lastSeen: string;
+  lastMessageAt?: string;
   isRemote?: boolean;
 };
 
@@ -160,14 +161,37 @@ export default function ChatPage() {
           ? contacts.filter((contact) => unreadContactIds.has(contact.id))
           : contacts;
 
+    const sortedContacts = [...folderContacts].sort((first, second) => {
+      const firstMessageAt =
+        latestMessageByContact.get(first.id)?.createdAt ?? first.lastMessageAt ?? "";
+      const secondMessageAt =
+        latestMessageByContact.get(second.id)?.createdAt ?? second.lastMessageAt ?? "";
+
+      if (!firstMessageAt && !secondMessageAt) {
+        return first.username.localeCompare(second.username);
+      }
+
+      if (!firstMessageAt) {
+        return 1;
+      }
+
+      if (!secondMessageAt) {
+        return -1;
+      }
+
+      return (
+        new Date(secondMessageAt).getTime() - new Date(firstMessageAt).getTime()
+      );
+    });
+
     if (!query) {
-      return folderContacts;
+      return sortedContacts;
     }
 
-    return folderContacts.filter((contact) =>
+    return sortedContacts.filter((contact) =>
       `${contact.username} ${contact.title}`.toLowerCase().includes(query)
     );
-  }, [activeFolder, contacts, search, unreadContactIds]);
+  }, [activeFolder, contacts, latestMessageByContact, search, unreadContactIds]);
 
   const activeMessages = useMemo(() => {
     return messages
@@ -245,6 +269,7 @@ export default function ChatPage() {
               title: remoteUser.display_name,
               publicKey: existing.get(remoteUser.id)?.publicKey ?? "",
               lastSeen: "remote user",
+              lastMessageAt: existing.get(remoteUser.id)?.lastMessageAt,
               isRemote: true,
             });
           });
@@ -376,6 +401,7 @@ export default function ChatPage() {
             lastSeen: conversation.last_message_at
               ? formatTime(conversation.last_message_at)
               : "recent",
+            lastMessageAt: conversation.last_message_at,
             isRemote: true,
           });
         });
